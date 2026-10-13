@@ -398,3 +398,56 @@ function animate() {
             gameState = "GAMEOVER";
             if (Math.floor(score) > highScore) {
                 highScore = Math.floor(score);
+            }
+        }
+
+        if (obs.x + obs.width < 0) {
+            obstacles.splice(i, 1);
+        }
+    }
+
+    ctx.fillStyle = isNight ? "#dfe6e9" : "#2d3436";
+    ctx.font = "bold 18px 'Segoe UI'";
+    let hiStr = String(highScore).padStart(5, '0');
+    let scStr = String(Math.floor(score)).padStart(5, '0');
+    ctx.fillText("HI: " + hiStr + "   SCORE: " + scStr, canvas.width - 240, 35);
+
+    if (gameState === "START") {
+        ctx.fillStyle = "rgba(0,0,0,0.4)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 22px 'Segoe UI'";
+        ctx.textAlign = "center";
+        ctx.fillText("NHẤN PHÍM CÁCH HOẶC CHẠM ĐỂ BẮT ĐẦU", canvas.width / 2, canvas.height / 2);
+        ctx.textAlign = "left";
+    } else if (gameState === "GAMEOVER") {
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#ff7675";
+        ctx.font = "bold 26px 'Segoe UI'";
+        ctx.textAlign = "center";
+        ctx.fillText("TRÒ CHƠI KẾT THÚC", canvas.width / 2, canvas.height / 2 - 15);
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "16px 'Segoe UI'";
+        ctx.fillText("Chạm hoặc nhấn phím để chơi lại", canvas.width / 2, canvas.height / 2 + 25);
+        ctx.textAlign = "left";
+    }
+
+    requestAnimationFrame(animate);
+}
+
+animate();
+</script>
+
+</body>
+</html>
+"""
+
+components.html(game_html, height=380, width=870)
+
+
+
+
+
+
+
