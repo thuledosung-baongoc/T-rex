@@ -52,7 +52,7 @@ game_html = """
 
 <div class="game-container">
     <canvas id="gameCanvas" width="850" height="350"></canvas>
-    <div class="instructions">Máy tính: [Space/↑] Nhảy rất cao, [↓] Cúi đầu | Điện thoại: Chạm để Nhảy, Vuốt xuống để Cúi</div>
+    <div class="instructions">Máy tính: [Space/↑] Nhảy cực cao, [↓] Cúi đầu | Điện thoại: Chạm để Nhảy, Vuốt xuống để Cúi</div>
 </div>
 
 <script>
@@ -63,17 +63,17 @@ let gameState = "START"; // START, PLAYING, GAMEOVER
 let score = 0;
 let highScore = 0;
 let gameSpeed = 6;
-let gravity = 0.55; // Giảm trọng lực một chút để khủng long bay lên cao và lơ lửng tốt hơn
+let gravity = 0.45; // Trọng lực nhẹ hơn giúp khủng long bay cao và mượt
 let animFrame = 0;
 
-// Khủng long màu sắc tươi sáng, lực nhảy cực khỏe
+// Khủng long màu sắc tươi sáng, lực nhảy được siêu cấp hóa
 const dino = {
     x: 60,
     y: 225,
     width: 48,
     height: 55,
     dy: 0,
-    jumpPower: -15.5, // Tăng mạnh lực nhảy giúp né mọi loại xương rồng
+    jumpPower: -17.5, // Lực nhảy cực mạnh vượt mọi chướng ngại vật
     grounded: true,
     ducking: false,
     draw() {
@@ -444,10 +444,3 @@ animate();
 """
 
 components.html(game_html, height=380, width=870)
-
-
-
-
-
-
-
