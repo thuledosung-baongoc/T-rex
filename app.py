@@ -16,7 +16,6 @@ body { background: #222; display: flex; justify-content: center; align-items: ce
     background: linear-gradient(to bottom, #87CEEB 0%, #87CEEB 70%, #d2b48c 70%, #d2b48c 100%);
     transition: background 1s;
 }
-#sky { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
 #player {
     position: absolute;
     bottom: 55px;
@@ -30,44 +29,16 @@ body { background: #222; display: flex; justify-content: center; align-items: ce
     user-select: none;
 }
 #player.duck { height: 25px; font-size: 25px; line-height: 25px; bottom: 30px; }
-.obstacle {
-    position: absolute;
-    bottom: 55px;
-    z-index: 2;
-    font-size: 40px;
-    line-height: 50px;
-    user-select: none;
-}
-.bird {
-    position: absolute;
-    z-index: 2;
-    font-size: 30px;
-    user-select: none;
-}
+.obstacle { position: absolute; bottom: 55px; z-index: 2; font-size: 40px; line-height: 50px; user-select: none; }
+.bird { position: absolute; z-index: 2; font-size: 30px; user-select: none; }
 #score { position: absolute; top: 10px; right: 10px; color: #333; font-size: 20px; font-weight: bold; z-index: 3; }
+#speedDisplay { position: absolute; top: 10px; left: 10px; color: #333; font-size: 14px; font-weight: bold; z-index: 3; }
 #gameOver {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0,0,0,0.8);
-    color: white;
-    padding: 20px 30px;
-    text-align: center;
-    border-radius: 10px;
-    display: none;
-    z-index: 5;
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.8); color: white; padding: 20px 30px;
+    text-align: center; border-radius: 10px; display: none; z-index: 5;
 }
-#gameOver button {
-    margin-top: 10px;
-    padding: 8px 20px;
-    font-size: 16px;
-    cursor: pointer;
-    border: none;
-    border-radius: 5px;
-    background: #4CAF50;
-    color: white;
-}
+#gameOver button { margin-top: 10px; padding: 8px 20px; font-size: 16px; cursor: pointer; border: none; border-radius: 5px; background: #4CAF50; color: white; }
 #gameOver button:hover { background: #45a049; }
 #instruction { position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); color: #333; font-size: 12px; z-index: 3; }
 </style>
@@ -75,7 +46,7 @@ body { background: #222; display: flex; justify-content: center; align-items: ce
 <body>
 
 <div id="gameContainer">
-    <div id="sky"></div>
+    <div id="speedDisplay">Tốc độ: 6</div>
     <div id="score">0</div>
     <div id="player">🦖</div>
     <div id="instruction">Nhấn SPACE để nhảy | Nhấn ↓ để cúi | Tránh 🦖 🌵 🦅</div>
@@ -92,10 +63,12 @@ const player = document.getElementById('player');
 const scoreEl = document.getElementById('score');
 const gameOverEl = document.getElementById('gameOver');
 const finalScoreEl = document.getElementById('finalScore');
+const speedDisplay = document.getElementById('speedDisplay');
 
 let score = 0;
 let gameRunning = false;
 let gameSpeed = 6;
+let maxSpeed = 20; // Tốc độ tối đa
 let obstacles = [];
 let birds = [];
 let jumpVelocity = 0;
@@ -107,15 +80,10 @@ let groundLevel = 55;
 let phase = 0; // 0: ngày, 1: đêm
 let zone = 0; // 0: đồng cỏ, 1: sa mạc, 2: rừng, 3: biển
 let zoneNames = ['Đồng cỏ', 'Sa mạc', 'Rừng Amazon', 'Biển'];
-let lastZoneChange = 0;
 
 // Tạo âm thanh bằng Web Audio API
 let audioCtx;
-try {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-} catch(e) {
-    audioCtx = null;
-}
+try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { audioCtx = null; }
 
 function playSound(type) {
     if (!audioCtx) return;
@@ -131,64 +99,57 @@ function playSound(type) {
         oscillator.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.1);
         gainNode.gain.setValueAtTime(0.2, ctx.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
-        oscillator.start(ctx.currentTime);
-        oscillator.stop(ctx.currentTime + 0.2);
+        oscillator.start(ctx.currentTime); oscillator.stop(ctx.currentTime + 0.2);
     } else if (type === 'duck') {
         oscillator.type = 'sawtooth';
         oscillator.frequency.setValueAtTime(200, ctx.currentTime);
         oscillator.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.1);
         gainNode.gain.setValueAtTime(0.15, ctx.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
-        oscillator.start(ctx.currentTime);
-        oscillator.stop(ctx.currentTime + 0.15);
+        oscillator.start(ctx.currentTime); oscillator.stop(ctx.currentTime + 0.15);
     } else if (type === 'score') {
         oscillator.type = 'sine';
         oscillator.frequency.setValueAtTime(800, ctx.currentTime);
         oscillator.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
         gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-        oscillator.start(ctx.currentTime);
-        oscillator.stop(ctx.currentTime + 0.1);
+        oscillator.start(ctx.currentTime); oscillator.stop(ctx.currentTime + 0.1);
     } else if (type === 'gameOver') {
         oscillator.type = 'sawtooth';
         oscillator.frequency.setValueAtTime(400, ctx.currentTime);
         oscillator.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.5);
         gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8);
-        oscillator.start(ctx.currentTime);
-        oscillator.stop(ctx.currentTime + 0.8);
+        oscillator.start(ctx.currentTime); oscillator.stop(ctx.currentTime + 0.8);
     }
 }
 
-// Cập nhật bầu trời (sáng/tối)
+// Cập nhật bầu trời (sáng/tối) theo điểm
 function updateSky() {
-    const sky = document.getElementById('sky');
-    if (phase === 0) {
-        // Ngày
-        if (zone === 0) sky.style.background = 'linear-gradient(to bottom, #87CEEB, #87CEEB)';
-        else if (zone === 1) sky.style.background = 'linear-gradient(to bottom, #FFD700, #FFA500)';
-        else if (zone === 2) sky.style.background = 'linear-gradient(to bottom, #228B22, #006400)';
-        else if (zone === 3) sky.style.background = 'linear-gradient(to bottom, #00BFFF, #1E90FF)';
-    } else {
-        // Đêm
-        if (zone === 0) sky.style.background = 'linear-gradient(to bottom, #1a1a2e, #0f3460)';
-        else if (zone === 1) sky.style.background = 'linear-gradient(to bottom, #2d1b69, #1a1a2e)';
-        else if (zone === 2) sky.style.background = 'linear-gradient(to bottom, #0b3d0b, #001a00)';
-        else if (zone === 3) sky.style.background = 'linear-gradient(to bottom, #001f3f, #000033)';
+    const sky = container;
+    // Đổi bầu trời mỗi 500 điểm
+    phase = Math.floor(score / 500) % 2;
+    // Đổi khu vực mỗi 2000 điểm
+    zone = Math.floor(score / 2000) % 4;
+    
+    if (phase === 0) { // Ngày
+        if (zone === 0) sky.style.background = 'linear-gradient(to bottom, #87CEEB 0%, #87CEEB 70%, #d2b48c 70%, #d2b48c 100%)';
+        else if (zone === 1) sky.style.background = 'linear-gradient(to bottom, #FFD700 0%, #FFD700 70%, #DAA520 70%, #DAA520 100%)';
+        else if (zone === 2) sky.style.background = 'linear-gradient(to bottom, #228B22 0%, #228B22 70%, #8B4513 70%, #8B4513 100%)';
+        else if (zone === 3) sky.style.background = 'linear-gradient(to bottom, #00BFFF 0%, #00BFFF 70%, #FFD700 70%, #FFD700 100%)';
+    } else { // Đêm
+        if (zone === 0) sky.style.background = 'linear-gradient(to bottom, #1a1a2e 0%, #1a1a2e 70%, #4a4a2e 70%, #4a4a2e 100%)';
+        else if (zone === 1) sky.style.background = 'linear-gradient(to bottom, #2d1b69 0%, #2d1b69 70%, #5c4033 70%, #5c4033 100%)';
+        else if (zone === 2) sky.style.background = 'linear-gradient(to bottom, #0b3d0b 0%, #0b3d0b 70%, #3d2b1f 70%, #3d2b1f 100%)';
+        else if (zone === 3) sky.style.background = 'linear-gradient(to bottom, #001f3f 0%, #001f3f 70%, #1a1a5e 70%, #1a1a5e 100%)';
     }
-    // Đổi màu nền đất
-    const ground = container.style;
-    if (zone === 0) ground.background = (phase === 0) ? 'linear-gradient(to bottom, #87CEEB 0%, #87CEEB 70%, #d2b48c 70%, #d2b48c 100%)' : 'linear-gradient(to bottom, #1a1a2e 0%, #1a1a2e 70%, #4a4a2e 70%, #4a4a2e 100%)';
-    else if (zone === 1) ground.background = (phase === 0) ? 'linear-gradient(to bottom, #FFD700 0%, #FFD700 70%, #DAA520 70%, #DAA520 100%)' : 'linear-gradient(to bottom, #2d1b69 0%, #2d1b69 70%, #5c4033 70%, #5c4033 100%)';
-    else if (zone === 2) ground.background = (phase === 0) ? 'linear-gradient(to bottom, #228B22 0%, #228B22 70%, #8B4513 70%, #8B4513 100%)' : 'linear-gradient(to bottom, #0b3d0b 0%, #0b3d0b 70%, #3d2b1f 70%, #3d2b1f 100%)';
-    else if (zone === 3) ground.background = (phase === 0) ? 'linear-gradient(to bottom, #00BFFF 0%, #00BFFF 70%, #FFD700 70%, #FFD700 100%)' : 'linear-gradient(to bottom, #001f3f 0%, #001f3f 70%, #1a1a5e 70%, #1a1a5e 100%)';
 }
 
 // Tạo vật cản
 function spawnObstacle() {
     const type = Math.random();
-    if (type < 0.4) {
-        // Khủng long chạy ngang (hình ảnh khủng long)
+    if (type < 0.35) {
+        // Khủng long chạy ngang
         const dino = document.createElement('div');
         dino.className = 'obstacle';
         dino.textContent = '🦖';
@@ -221,30 +182,22 @@ function spawnObstacle() {
 function gameLoop() {
     if (!gameRunning) return;
     
-    // Cập nhật score
+    // Cập nhật điểm
     score += 1;
     scoreEl.textContent = score;
     
-    // Kiểm tra đổi bầu trời (500 điểm)
+    // Tăng độ khó theo thời gian (mỗi 200 điểm tăng tốc 0.5, tối đa 20)
+    gameSpeed = Math.min(6 + Math.floor(score / 200) * 0.5, maxSpeed);
+    speedDisplay.textContent = 'Tốc độ: ' + gameSpeed.toFixed(1);
+    
+    // Kiểm tra đổi bầu trời/khu vực
     const newPhase = Math.floor(score / 500) % 2;
-    if (newPhase !== phase) {
-        phase = newPhase;
-        updateSky();
-        playSound('score');
-    }
-    
-    // Kiểm tra đổi khu vực (2000 điểm)
     const newZone = Math.floor(score / 2000) % 4;
-    if (newZone !== zone) {
-        zone = newZone;
+    if (newPhase !== phase || newZone !== zone) {
         updateSky();
         playSound('score');
-        // Hiển thị tên khu vực
-        showZoneName();
+        if (newZone !== zone) showZoneName();
     }
-    
-    // Tăng tốc độ dần
-    gameSpeed = 6 + Math.floor(score / 300) * 0.5;
     
     // Xử lý nhảy
     if (isJumping) {
@@ -265,10 +218,7 @@ function gameLoop() {
         let x = parseFloat(obs.style.left);
         x -= gameSpeed;
         obs.style.left = x + 'px';
-        if (x < -50) {
-            obs.remove();
-            obstacles.splice(i, 1);
-        }
+        if (x < -50) { obs.remove(); obstacles.splice(i, 1); }
     }
     
     // Di chuyển chim
@@ -279,58 +229,37 @@ function gameLoop() {
         let y = parseFloat(bird.style.bottom) + parseFloat(bird.dataset.vy);
         bird.style.left = x + 'px';
         bird.style.bottom = y + 'px';
-        if (x < -50) {
-            bird.remove();
-            birds.splice(i, 1);
-        }
+        if (x < -50) { bird.remove(); birds.splice(i, 1); }
     }
     
     // Kiểm tra va chạm
-    if (checkCollision()) {
-        endGame();
-        return;
-    }
+    if (checkCollision()) { endGame(); return; }
     
-    // Random spawn vật cản
-    if (Math.random() < 0.02) {
-        spawnObstacle();
-    }
+    // Random spawn vật cản (tăng tần suất khi tốc độ cao)
+    const spawnRate = 0.02 + (gameSpeed - 6) * 0.002;
+    if (Math.random() < spawnRate) spawnObstacle();
     
     requestAnimationFrame(gameLoop);
 }
 
 // Kiểm tra va chạm
 function checkCollision() {
-    const playerRect = {
-        left: 50,
-        right: 50 + 40,
-        bottom: isDucking ? 30 : (groundLevel + playerY),
-        top: isDucking ? 30 + 25 : (groundLevel + playerY + 50)
-    };
+    const playerBottom = isDucking ? 30 : (groundLevel + playerY);
+    const playerHeight = isDucking ? 25 : 50;
+    const playerRect = { left: 50, right: 90, bottom: playerBottom, top: playerBottom + playerHeight };
     
     for (const obs of obstacles) {
         const obsX = parseFloat(obs.style.left);
-        const obsRect = {
-            left: obsX,
-            right: obsX + 40,
-            bottom: groundLevel,
-            top: groundLevel + 50
-        };
+        const obsRect = { left: obsX, right: obsX + 40, bottom: groundLevel, top: groundLevel + 50 };
         if (rectsOverlap(playerRect, obsRect)) return true;
     }
     
     for (const bird of birds) {
         const birdX = parseFloat(bird.style.left);
         const birdY = parseFloat(bird.style.bottom);
-        const birdRect = {
-            left: birdX,
-            right: birdX + 30,
-            bottom: birdY,
-            top: birdY + 30
-        };
+        const birdRect = { left: birdX, right: birdX + 30, bottom: birdY, top: birdY + 30 };
         if (rectsOverlap(playerRect, birdRect)) return true;
     }
-    
     return false;
 }
 
@@ -396,6 +325,7 @@ function restartGame() {
     score = 0;
     scoreEl.textContent = '0';
     gameSpeed = 6;
+    speedDisplay.textContent = 'Tốc độ: 6';
     isJumping = false;
     isDucking = false;
     playerY = 0;
