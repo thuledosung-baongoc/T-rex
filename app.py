@@ -7,7 +7,7 @@ st.markdown("""
     <h1 style='text-align: center; color: #2ecc71; font-family: monospace;'>🦖 T-REX RUNNER COLORFUL</h1>
     <p style='text-align: center; color: #b2bec3; font-family: monospace;'>
     - 🌵 <b>Xương rồng dưới đất:</b> Bấm <b>Spacebar / Mũi tên lên</b> hoặc nút <b>NHẢY</b> để vượt qua<br>
-    - 🦅 <b>Chim bay tầm cao:</b> Bấm <b>Mũi tên xuống</b> hoặc nút <b>CÚI</b> để chui qua (Nhảy lên là va phải chim!)<br>
+    - 🦅 <b>Chim bay tầm cao:</b> Bấm <b>Mũi tên xuống</b> hoặc nút <b>CÚI</b> để chui qua<br>
     - 🌅 Bầu trời chuyển Ngày / Đêm sinh động mỗi <b>500 điểm</b>!
     </p>
 """, unsafe_allow_html=True)
@@ -81,7 +81,6 @@ game_code = """
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-// System Âm thanh Web Audio API
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
 
@@ -93,9 +92,9 @@ function playSound(type) {
     if (!audioCtx) return;
     try {
         const osc = audioCtx.createOscillator();
-const gain = audioCtx.createGain();
+        const gain = audioCtx.createGain();
         osc.connect(gain);
-        gain.connect(audioCtx.destination);
+gain.connect(audioCtx.destination);
 
         if (type === 'jump') {
             osc.type = 'square';
@@ -131,7 +130,6 @@ let gameSpeed = 5;
 let isGameOver = false;
 let isNightMode = false;
 
-// Đám mây sinh động trên trời
 let clouds = [];
 for(let i = 0; i < 4; i++) {
     clouds.push({
@@ -142,7 +140,6 @@ for(let i = 0; i < 4; i++) {
     });
 }
 
-// Khủng Long T-Rex Pixel
 let dino = {
     x: 50,
     y: 165,
@@ -157,15 +154,13 @@ let dino = {
     isDucking: false,
     animFrame: 0,
     draw() {
-        ctx.fillStyle = isNightMode ? "#2ecc71" : "#27ae60"; // Màu xanh lá pixel rực rỡ
+        ctx.fillStyle = isNightMode ? "#2ecc71" : "#27ae60";
         if (this.isDucking && !this.isJumping) {
-            // Cúi người thấp hẳn xuống
             ctx.fillRect(this.x, this.y + 16, 42, 20);
             ctx.fillRect(this.x + 26, this.y + 8, 16, 12);
             ctx.fillStyle = "#fff";
             ctx.fillRect(this.x + 36, this.y + 10, 3, 3);
         } else {
-            // Đứng chạy
             ctx.fillRect(this.x + 6, this.y + 12, 18, 16);
             ctx.fillRect(this.x + 14, this.y, 16, 14);
             ctx.fillStyle = "#fff";
@@ -174,12 +169,102 @@ let dino = {
             ctx.fillRect(this.x + 20, this.y + 14, 4, 3);
             
             if (this.isJumping) {
-ctx.fillRect(this.x + 8, this.y + 28, 4, 8);
+                ctx.fillRect(this.x + 8, this.y + 28, 4, 8);
                 ctx.fillRect(this.x + 16, this.y + 28, 4, 8);
             } else {
                 if (Math.floor(this.animFrame / 8) % 2 === 0) {
                     ctx.fillRect(this.x + 8, this.y + 28, 4, 8);
-                    ctx.fillRect(this.x + 16, this.y + 28, 3, 6);
+if (e.code === "ArrowDown") {
+        if (!isGameOver) dino.duck(true);
+        e.preventDefault();
+    }
+});
+
+window.addEventListener("keyup", e => {
+    if (e.code === "ArrowDown") {
+        if (!isGameOver) dino.duck(false);
+    }
+});
+
+document.getElementById("jumpBtn").addEventListener("click", () => {
+    if (isGameOver) resetGame();
+    else dino.jump();
+});
+
+const duckBtn = document.getElementById("duckBtn");
+duckBtn.addEventListener("mousedown", () => { if(!isGameOver) dino.duck(true); });
+duckBtn.addEventListener("mouseup", () => { if(!isGameOver) dino.duck(false); });
+duckBtn.addEventListener("touchstart", (e) => { if(!isGameOver) dino.duck(true); e.preventDefault(); });
+duckBtn.addEventListener("touchend", (e) => { if(!isGameOver) dino.duck(false); e.preventDefault(); });
+
+let obstacleTimer = 0;
+
+function gameLoop() {
+    let currentScore = Math.floor(score);
+    isNightMode = Math.floor(currentScore / 500) % 2 === 1;
+
+    ctx.fillStyle = isNightMode ? "#111827" : "#70c5ce";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = isNightMode ? "#f1c40f" : "#f39c12";
+    ctx.fillRect(680, 25, 28, 28);
+
+    ctx.fillStyle = isNightMode ? "rgba(255, 255, 255, 0.2)" : "rgba(255, 255, 255, 0.85)";
+    clouds.forEach(cloud => {
+        cloud.x -= cloud.speed;
+        if (cloud.x < -60) cloud.x = canvas.width + 50;
+        ctx.fillRect(cloud.x, cloud.y, cloud.width, 10);
+        ctx.fillRect(cloud.x + 8, cloud.y - 6, cloud.width - 16, 6);
+    });
+
+    ctx.fillStyle = isNightMode ? "#374151" : "#d1a153";
+    ctx.fillRect(0, 200, canvas.width, 50);
+    ctx.fillStyle = isNightMode ? "#1f2937" : "#8c6239";
+    ctx.fillRect(0, 200, canvas.width, 4);
+
+    if (!isGameOver) {
+        dino.update();
+        score += 0.15;
+        gameSpeed = 5.5 + (score / 150);
+
+        obstacleTimer++;
+        if (obstacleTimer > Math.max(50, 90 - (gameSpeed * 2)) + Math.random() * 40) {
+            if (score > 80 && Math.random() > 0.45) {
+                obstacles.push(new HighBird());
+            } else {
+                obstacles.push(new Cactus());
+            }
+            obstacleTimer = 0;
+        }
+    }
+
+    for (let i = obstacles.length - 1; i >= 0; i--) {
+        obstacles[i].update();
+        obstacles[i].draw();
+
+        if (
+            dino.x + 4 < obstacles[i].x + obstacles[i].width - 4 &&
+            dino.x + dino.width - 4 > obstacles[i].x + 4 &&
+            dino.y + 4 < obstacles[i].y + obstacles[i].height &&
+            dino.y + dino.height > obstacles[i].y
+        ) {
+            if (!isGameOver) {
+                playSound('gameover');
+            }
+            isGameOver = true;
+            if (score > highScore) highScore = Math.floor(score);
+        }
+
+        if (obstacles[i].x < -40) {
+            obstacles.splice(i, 1);
+        }
+    }
+
+    dino.draw();
+
+    ctx.fillStyle = isNightMode ? "#f9fafb" : "#1f2937";
+    ctx.font = "bold 15px 'Courier New'";
+ctx.fillRect(this.x + 16, this.y + 28, 3, 6);
                 } else {
                     ctx.fillRect(this.x + 8, this.y + 28, 3, 6);
                     ctx.fillRect(this.x + 16, this.y + 28, 4, 8);
@@ -228,7 +313,6 @@ ctx.fillRect(this.x + 8, this.y + 28, 4, 8);
 
 let obstacles = [];
 
-// Xương rồng dưới đất
 class Cactus {
     constructor() {
         this.width = 22;
@@ -249,18 +333,17 @@ class Cactus {
     }
 }
 
-// Chim bay NGANG TẦM ĐẦU (Bắt buộc CÚI xuống mới qua được, nhảy lên sẽ trúng!)
 class HighBird {
     constructor() {
         this.width = 32;
         this.height = 20;
         this.x = canvas.width;
-        this.y = 152; // Tầm bay ngang đầu khủng long đứng!
+        this.y = 152;
         this.type = 'bird';
         this.animFrame = 0;
     }
     draw() {
-        ctx.fillStyle = "#e74c3c"; // Chim màu đỏ nổi bật
+        ctx.fillStyle = "#e74c3c";
         ctx.fillRect(this.x, this.y + 6, 32, 10);
         ctx.fillRect(this.x + 8, this.y, 10, 8);
         
@@ -272,7 +355,7 @@ class HighBird {
         }
         this.animFrame++;
     }
-update() {
+    update() {
         this.x -= gameSpeed;
     }
 }
@@ -294,54 +377,30 @@ window.addEventListener("keydown", e => {
         else dino.jump();
         e.preventDefault();
     }
-    if (e.code === "ArrowDown") {
-        if (!isGameOver) dino.duck(true);
-        e.preventDefault();
+ctx.fillText("ĐIỂM: " + currentScore, 630, 30);
+    ctx.fillText("KỶ LỤC: " + highScore, 630, 52);
+
+    if (isGameOver) {
+        ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.fillStyle = "#e74c3c";
+        ctx.font = "bold 24px 'Courier New'";
+        ctx.fillText("💀 GAME OVER - VẤP NGÃ RỒI!", 210, 100);
+        
+        ctx.fillStyle = "#fff";
+        ctx.font = "15px 'Courier New'";
+        ctx.fillText("Bấm [SPACEBAR] hoặc nút [NHẢY] để chơi lại", 205, 145);
     }
-});
 
-window.addEventListener("keyup", e => {
-    if (e.code === "ArrowDown") {
-        if (!isGameOver) dino.duck(false);
-    }
-});
+    requestAnimationFrame(gameLoop);
+}
 
-document.getElementById("jumpBtn").addEventListener("click", () => {
-    if (isGameOver) resetGame();
-    else dino.jump();
-});
+gameLoop();
+</script>
 
-const duckBtn = document.getElementById("duckBtn");
-duckBtn.addEventListener("mousedown", () => { if(!isGameOver) dino.duck(true); });
-duckBtn.addEventListener("mouseup", () => { if(!isGameOver) dino.duck(false); });
-duckBtn.addEventListener("touchstart", (e) => { if(!isGameOver) dino.duck(true); e.preventDefault(); });
-duckBtn.addEventListener("touchend", (e) => { if(!isGameOver) dino.duck(false); e.preventDefault(); });
+</body>
+</html>
+"""
 
-let obstacleTimer = 0;
-
-function gameLoop() {
-    // 500 điểm ĐỔI MÀU BẦU TRỜI
-    let currentScore = Math.floor(score);
-    isNightMode = Math.floor(currentScore / 500) % 2 === 1;
-
-    // Nền Bầu Trời
-    ctx.fillStyle = isNightMode ? "#111827" : "#70c5ce";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Mặt trời / Mặt trăng Pixel
-    ctx.fillStyle = isNightMode ? "#f1c40f" : "#f39c12";
-    ctx.fillRect(680, 25, 28, 28);
-
-    // Vẽ mây bay trôi nhẹ nhàng
-    ctx.fillStyle = isNightMode ? "rgba(255, 255, 255, 0.2)" : "rgba(255, 255, 255, 0.85)";
-    clouds.forEach(cloud => {
-        cloud.x -= cloud.speed;
-        if (cloud.x < -60) cloud.x = canvas.width + 50;
-        ctx.fillRect(cloud.x, cloud.y, cloud.width, 10);
-        ctx.fillRect(cloud.x + 8, cloud.y - 6, cloud.width - 16, 6);
-    });
-
-    // Mặt đất sinh động
-    ctx.fillStyle = isNightMode ? "#374151" : "#d1a153";
-    ctx.fillRect(0, 200, canvas.width, 50);
-    ctx.fillStyle = isNightMode ? "#1f2937"
+components.html(game_code, height=360)
