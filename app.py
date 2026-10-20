@@ -1,14 +1,14 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="T-Rex Runner Pro", page_icon="🦖", layout="centered")
+st.set_page_config(page_title="T-Rex Runner Vivid", page_icon="🦖", layout="centered")
 
 st.markdown("""
-    <h1 style='text-align: center; color: #2ecc71; font-family: monospace;'>🦖 T-REX RUNNER PRO</h1>
+    <h1 style='text-align: center; color: #2ecc71; font-family: monospace;'>🦖 T-REX RUNNER COLORFUL</h1>
     <p style='text-align: center; color: #b2bec3; font-family: monospace;'>
-    - Nhấn <b>Spacebar / Mũi tên lên</b> hoặc nút <b>NHẢY</b> để né xương rồng<br>
-    - Nhấn <b>Mũi tên xuống</b> hoặc giữ nút <b>CÚI</b> để né chim bay chéo xuống<br>
-    - Bầu trời chuyển Ngày / Đêm mỗi <b>500 điểm</b>!
+    - 🌵 <b>Xương rồng dưới đất:</b> Bấm <b>Spacebar / Mũi tên lên</b> hoặc nút <b>NHẢY</b> để vượt qua<br>
+    - 🦅 <b>Chim bay tầm cao:</b> Bấm <b>Mũi tên xuống</b> hoặc nút <b>CÚI</b> để chui qua (Nhảy lên là va phải chim!)<br>
+    - 🌅 Bầu trời chuyển Ngày / Đêm sinh động mỗi <b>500 điểm</b>!
     </p>
 """, unsafe_allow_html=True)
 
@@ -17,7 +17,7 @@ game_code = """
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>T-Rex Runner Pro</title>
+    <title>T-Rex Runner Vivid</title>
     <style>
         body {
             margin: 0;
@@ -35,7 +35,7 @@ game_code = """
             image-rendering: pixelated;
             image-rendering: crisp-edges;
             box-shadow: 0 0 25px rgba(46, 204, 113, 0.4);
-            background: #f7f7f7;
+            background: #70c5ce;
             transition: background 1s ease;
         }
         .btn-container {
@@ -81,22 +81,20 @@ game_code = """
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-// System Âm thanh Web Audio API (Retro Sound Effects)
+// System Âm thanh Web Audio API
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
 
 function initAudio() {
-    if (!audioCtx) {
-        audioCtx = new AudioContext();
-    }
+    if (!audioCtx) audioCtx = new AudioContext();
 }
 
 function playSound(type) {
     if (!audioCtx) return;
     try {
         const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-osc.connect(gain);
+const gain = audioCtx.createGain();
+        osc.connect(gain);
         gain.connect(audioCtx.destination);
 
         if (type === 'jump') {
@@ -131,11 +129,20 @@ let score = 0;
 let highScore = 0;
 let gameSpeed = 5;
 let isGameOver = false;
-
-// Trạng thái ngày/đêm
 let isNightMode = false;
 
-// Khủng Long T-Rex
+// Đám mây sinh động trên trời
+let clouds = [];
+for(let i = 0; i < 4; i++) {
+    clouds.push({
+        x: Math.random() * canvas.width,
+        y: 20 + Math.random() * 45,
+        speed: 0.4 + Math.random() * 0.6,
+        width: 45 + Math.random() * 25
+    });
+}
+
+// Khủng Long T-Rex Pixel
 let dino = {
     x: 50,
     y: 165,
@@ -150,29 +157,29 @@ let dino = {
     isDucking: false,
     animFrame: 0,
     draw() {
-        ctx.fillStyle = isNightMode ? "#ecf0f1" : "#535353";
+        ctx.fillStyle = isNightMode ? "#2ecc71" : "#27ae60"; // Màu xanh lá pixel rực rỡ
         if (this.isDucking && !this.isJumping) {
-            // Tư thế cúi sát người né chim
+            // Cúi người thấp hẳn xuống
             ctx.fillRect(this.x, this.y + 16, 42, 20);
             ctx.fillRect(this.x + 26, this.y + 8, 16, 12);
-            ctx.fillStyle = isNightMode ? "#2c3e50" : "#fff";
+            ctx.fillStyle = "#fff";
             ctx.fillRect(this.x + 36, this.y + 10, 3, 3);
         } else {
             // Đứng chạy
             ctx.fillRect(this.x + 6, this.y + 12, 18, 16);
             ctx.fillRect(this.x + 14, this.y, 16, 14);
-            ctx.fillStyle = isNightMode ? "#2c3e50" : "#fff";
+            ctx.fillStyle = "#fff";
             ctx.fillRect(this.x + 24, this.y + 3, 3, 3);
-            ctx.fillStyle = isNightMode ? "#ecf0f1" : "#535353";
+            ctx.fillStyle = isNightMode ? "#2ecc71" : "#27ae60";
             ctx.fillRect(this.x + 20, this.y + 14, 4, 3);
             
             if (this.isJumping) {
-                ctx.fillRect(this.x + 8, this.y + 28, 4, 8);
+ctx.fillRect(this.x + 8, this.y + 28, 4, 8);
                 ctx.fillRect(this.x + 16, this.y + 28, 4, 8);
             } else {
                 if (Math.floor(this.animFrame / 8) % 2 === 0) {
                     ctx.fillRect(this.x + 8, this.y + 28, 4, 8);
-ctx.fillRect(this.x + 16, this.y + 28, 3, 6);
+                    ctx.fillRect(this.x + 16, this.y + 28, 3, 6);
                 } else {
                     ctx.fillRect(this.x + 8, this.y + 28, 3, 6);
                     ctx.fillRect(this.x + 16, this.y + 28, 4, 8);
@@ -221,45 +228,43 @@ ctx.fillRect(this.x + 16, this.y + 28, 3, 6);
 
 let obstacles = [];
 
-// Xương rồng
+// Xương rồng dưới đất
 class Cactus {
     constructor() {
-        this.width = 20;
-        this.height = 35;
+        this.width = 22;
+        this.height = 36;
         this.x = canvas.width;
         this.y = 200 - this.height;
         this.type = 'cactus';
     }
     draw() {
-        ctx.fillStyle = "#27ae60";
-        ctx.fillRect(this.x, this.y, this.width, this.height);
         ctx.fillStyle = "#1e8449";
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+        ctx.fillStyle = "#2ecc71";
         ctx.fillRect(this.x - 4, this.y + 8, 4, 6);
-        ctx.fillRect(this.x + this.width, this.y + 16, 4, 6);
+        ctx.fillRect(this.x + this.width, this.y + 14, 4, 6);
     }
     update() {
         this.x -= gameSpeed;
     }
 }
 
-// Chim bay CHÉO XUỐNG (Di chuyển đường chéo từ cao xuống tầm đầu)
-class DiagonalBird {
+// Chim bay NGANG TẦM ĐẦU (Bắt buộc CÚI xuống mới qua được, nhảy lên sẽ trúng!)
+class HighBird {
     constructor() {
-        this.width = 30;
+        this.width = 32;
         this.height = 20;
         this.x = canvas.width;
-        this.y = 100; // Khởi điểm bay cao trên trời
-        this.targetY = 158; // Bay chéo xuống ngay tầm đầu khủng long!
-        this.vy = 0.6; // Tốc độ sà xuống
+        this.y = 152; // Tầm bay ngang đầu khủng long đứng!
         this.type = 'bird';
         this.animFrame = 0;
     }
     draw() {
-        ctx.fillStyle = isNightMode ? "#e74c3c" : "#8e44ad";
-        ctx.fillRect(this.x, this.y + 6, 30, 10);
+        ctx.fillStyle = "#e74c3c"; // Chim màu đỏ nổi bật
+        ctx.fillRect(this.x, this.y + 6, 32, 10);
         ctx.fillRect(this.x + 8, this.y, 10, 8);
         
-        ctx.fillStyle = isNightMode ? "#ff7675" : "#9b59b6";
+        ctx.fillStyle = "#c0392b";
         if (Math.floor(this.animFrame / 8) % 2 === 0) {
             ctx.fillRect(this.x + 12, this.y - 6, 8, 8);
         } else {
@@ -267,12 +272,8 @@ class DiagonalBird {
         }
         this.animFrame++;
     }
-    update() {
+update() {
         this.x -= gameSpeed;
-        // Quỹ đạo sà chéo xuống
-        if (this.y < this.targetY) {
-this.y += this.vy;
-        }
     }
 }
 
@@ -287,7 +288,6 @@ function resetGame() {
     dino.isDucking = false;
 }
 
-// Bắt sự kiện phím
 window.addEventListener("keydown", e => {
     if (e.code === "Space" || e.code === "ArrowUp") {
         if (isGameOver) resetGame();
@@ -306,7 +306,6 @@ window.addEventListener("keyup", e => {
     }
 });
 
-// Nút bấm ảo
 document.getElementById("jumpBtn").addEventListener("click", () => {
     if (isGameOver) resetGame();
     else dino.jump();
@@ -321,98 +320,28 @@ duckBtn.addEventListener("touchend", (e) => { if(!isGameOver) dino.duck(false); 
 let obstacleTimer = 0;
 
 function gameLoop() {
-    // 500 điểm ĐỔI MÀU BẦU TRỜI (NGÀY / ĐÊM)
+    // 500 điểm ĐỔI MÀU BẦU TRỜI
     let currentScore = Math.floor(score);
     isNightMode = Math.floor(currentScore / 500) % 2 === 1;
 
-    // Nền bầu trời
-    ctx.fillStyle = isNightMode ? "#1a252f" : "#f7f7f7";
+    // Nền Bầu Trời
+    ctx.fillStyle = isNightMode ? "#111827" : "#70c5ce";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Mặt trời / Mặt trăng
+    // Mặt trời / Mặt trăng Pixel
     ctx.fillStyle = isNightMode ? "#f1c40f" : "#f39c12";
-    ctx.fillRect(700, 30, 24, 24);
+    ctx.fillRect(680, 25, 28, 28);
 
-    // Đường mặt đất
-    ctx.strokeStyle = isNightMode ? "#bdc3c7" : "#535353";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(0, 200);
-    ctx.lineTo(canvas.width, 200);
-    ctx.stroke();
+    // Vẽ mây bay trôi nhẹ nhàng
+    ctx.fillStyle = isNightMode ? "rgba(255, 255, 255, 0.2)" : "rgba(255, 255, 255, 0.85)";
+    clouds.forEach(cloud => {
+        cloud.x -= cloud.speed;
+        if (cloud.x < -60) cloud.x = canvas.width + 50;
+        ctx.fillRect(cloud.x, cloud.y, cloud.width, 10);
+        ctx.fillRect(cloud.x + 8, cloud.y - 6, cloud.width - 16, 6);
+    });
 
-    if (!isGameOver) {
-        dino.update();
-        score += 0.15;
-        // Tốc độ TĂNG NHANH DẦN theo thời gian
-        gameSpeed = 5.5 + (score / 150);
-
-        obstacleTimer++;
-        if (obstacleTimer > Math.max(50, 90 - (gameSpeed * 2)) + Math.random() * 40) {
-            // Sinh chim bay chéo xuống hoặc xương rồng
-            if (score > 100 && Math.random() > 0.45) {
-                obstacles.push(new DiagonalBird());
-            } else {
-                obstacles.push(new Cactus());
-            }
-            obstacleTimer = 0;
-        }
-    }
-
-    // Xử lý chướng ngại vật
-    for (let i = obstacles.length - 1; i >= 0; i--) {
-        obstacles[i].update();
-        obstacles[i].draw();
-
-        // Kiểm tra va chạm AABB
-        if (
-            dino.x + 4 < obstacles[i].x + obstacles[i].width - 4 &&
-            dino.x + dino.width - 4 > obstacles[i].x + 4 &&
-            dino.y + 4 < obstacles[i].y + obstacles[i].height &&
-dino.y + dino.height > obstacles[i].y
-        ) {
-            if (!isGameOver) {
-                playSound('gameover');
-            }
-            isGameOver = true;
-            if (score > highScore) highScore = Math.floor(score);
-        }
-
-        if (obstacles[i].x < -40) {
-            obstacles.splice(i, 1);
-        }
-    }
-
-    dino.draw();
-
-    // Hiển thị điểm & chế độ
-    ctx.fillStyle = isNightMode ? "#ecf0f1" : "#535353";
-    ctx.font = "bold 15px 'Courier New'";
-    ctx.fillText("ĐIỂM: " + currentScore, 630, 30);
-    ctx.fillText("KỶ LỤC: " + highScore, 630, 52);
-
-    // Màn hình Game Over
-    if (isGameOver) {
-        ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        ctx.fillStyle = "#e74c3c";
-        ctx.font = "bold 24px 'Courier New'";
-        ctx.fillText("💀 GAME OVER - BỊ VA CHẠM!", 210, 100);
-        
-        ctx.fillStyle = "#fff";
-        ctx.font = "15px 'Courier New'";
-        ctx.fillText("Bấm [SPACEBAR] hoặc nút [NHẢY] để chơi lại", 205, 145);
-    }
-
-    requestAnimationFrame(gameLoop);
-}
-
-gameLoop();
-</script>
-
-</body>
-</html>
-"""
-
-components.html(game_code, height=360)
+    // Mặt đất sinh động
+    ctx.fillStyle = isNightMode ? "#374151" : "#d1a153";
+    ctx.fillRect(0, 200, canvas.width, 50);
+    ctx.fillStyle = isNightMode ? "#1f2937"
